@@ -26,12 +26,18 @@ connectDB();
 const app = express();
 
 // Enable CORS for all origins (for development purposes)
-app.use(cors());
+// app.use(cors());
   
 // app.use(cors({
 //   origin: 'https://bill-app-frontend.netlify.app',
 //   credentials: true
 // }));
+
+app.use(cors({
+  origin: ['https://bill-app-frontend-beta.vercel.app', 'http://localhost:5173'],
+  credentials: true
+}));
+
 
 app.use(express.json());
 app.use(morgan('dev'));
