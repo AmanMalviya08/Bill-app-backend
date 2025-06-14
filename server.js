@@ -34,7 +34,7 @@ const app = express();
 // }));
 
 app.use(cors({
-  origin: ['https://bill-app-frontend-beta.vercel.app', 'http://localhost:5173'],
+  origin: '*',
   credentials: true
 }));
 
