@@ -26,12 +26,12 @@ connectDB();
 const app = express();
 
 // Enable CORS for all origins (for development purposes)
-// app.use(cors());
+app.use(cors());
   
-app.use(cors({
-  origin: 'https://bill-app-frontend.netlify.app',
-  credentials: true
-}));
+// app.use(cors({
+//   origin: 'https://bill-app-frontend.netlify.app',
+//   credentials: true
+// }));
 
 app.use(express.json());
 app.use(morgan('dev'));
