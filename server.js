@@ -13,50 +13,40 @@ const branchRoutes = require('./routes/branchRoutes');
 
 dotenv.config();
 
-// ✅ Ensure MONGO_URI
+// ✅ Check for Mongo URI
 if (!process.env.MONGO_URI) {
-  console.error("❌ MONGO_URI not set");
+  console.error("❌ Error: MONGO_URI is not defined in .env file.");
   process.exit(1);
 }
 
-// ✅ Connect DB
+// ✅ Connect to DB
 connectDB();
 
 // ✅ App setup
 const app = express();
 
-// ✅ Define allowed origins
-const allowedOrigins = ['https://sensational-brioche-dc91e2.netlify.app'];
+// ✅ Enable CORS for specific origins
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://sensational-brioche-dc91e2.netlify.app'
+];
 
-// ✅ Custom CORS logic
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-
-  if (allowedOrigins.includes(origin)) {
-    // Production site
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-  } else {
-    // Allow all in development (no credentials)
-    res.header('Access-Control-Allow-Origin', '*');
-  }
-
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-
-  next();
-});
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 
 // ✅ Middleware
 app.use(express.json());
 app.use(morgan('dev'));
 
-// ✅ Routes
+// ✅ Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/categories', categoryRoutes);
@@ -75,12 +65,12 @@ app.get('/', (req, res) => {
 
 // ✅ Error handler
 app.use((err, req, res, next) => {
-  console.error('❌ Error:', err.stack);
+  console.error('❌ Server Error:', err.stack);
   res.status(500).json({ message: 'Internal Server Error' });
 });
 
-// ✅ Server start
+// ✅ Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`✅ Server is running on http://localhost:${PORT}`);
+  console.log(`✅ Server is running at: http://localhost:${PORT}`);
 });
