@@ -9,66 +9,78 @@ const authRoutes = require('./routes/authRoutes');
 const companyRoutes = require('./routes/companyRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes');
-const branchRoutes = require('./routes/branchRoutes'); // Add this
+const branchRoutes = require('./routes/branchRoutes');
 
 dotenv.config();
 
-// Check for Mongo URI
+// ✅ Ensure MONGO_URI
 if (!process.env.MONGO_URI) {
-  console.error("❌ Error: MONGO_URI is not defined in .env file.");
+  console.error("❌ MONGO_URI not set");
   process.exit(1);
 }
 
-// Connect to DB
+// ✅ Connect DB
 connectDB();
 
-// App setup
+// ✅ App setup
 const app = express();
 
-// Enable CORS for all origins (for development purposes)
-app.use(cors());
-  
-// app.use(cors({
-//   origin: 'https://bill-app-frontend.netlify.app',
-//   credentials: true
-// }));
+// ✅ Define allowed origins
+const allowedOrigins = ['https://sensational-brioche-dc91e2.netlify.app'];
 
-app.use(cors({
-  origin: '*',
-  credentials: true
-}));
+// ✅ Custom CORS logic
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
 
+  if (allowedOrigins.includes(origin)) {
+    // Production site
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  } else {
+    // Allow all in development (no credentials)
+    res.header('Access-Control-Allow-Origin', '*');
+  }
 
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
+// ✅ Middleware
 app.use(express.json());
 app.use(morgan('dev'));
 
-// ✅ Mount routes
+// ✅ Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/categories', categoryRoutes);
 
 app.use('/api/companies/:companyId/branches', (req, res, next) => {
-  req.companyId = req.params.companyId; // ✅ Pass companyId down
+  req.companyId = req.params.companyId;
   next();
 }, branchRoutes);
 
-
-// ✅ Invoice routes nested under company and branch
 app.use('/api/companies/:companyId/branches/:branchId/invoices', invoiceRoutes);
 
-// Root test
+// ✅ Root route
 app.get('/', (req, res) => {
   res.status(200).send('🚀 Billing System API is running...');
 });
 
-// Error handler middleware
+// ✅ Error handler
 app.use((err, req, res, next) => {
-  console.error('❌ Server Error:', err.stack);
+  console.error('❌ Error:', err.stack);
   res.status(500).json({ message: 'Internal Server Error' });
 });
 
-// Server
+// ✅ Server start
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`✅ Server is running at: http://localhost:${PORT}`);
+  console.log(`✅ Server is running on http://localhost:${PORT}`);
 });
